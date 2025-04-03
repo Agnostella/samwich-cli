@@ -1,11 +1,18 @@
-name: Sam build with poetry
-description: Build python lambda artifacts using Poetry and SAM CLI
+name: Prepare Poetry project for SAM build
+description: |
+  This action prepares a Python project for AWS SAM build using Poetry.
+  The requirements.txt file must already be generated from Poetry using poetry-plugin-export.
+  After the action runs, sam build can be run to build the project.
 
 inputs:
-  sam-build-workdir:
-    description: The working directory for the SAM CLI build command
-    required: false
+  template-file:
+    description: The CloudFormation template file that will be used for the build
+    required: true
     default: ""
+  requirements:
+    description: The requirements file to use for the build
+    required: false
+    default: requirements.txt
 
 outputs:
   build-path:
@@ -18,7 +25,10 @@ runs:
     - name: Build
       id: build
       working-directory: ${{ inputs.sam-build-workdir }}
+      shell: bash
+      run: |
+        python ${{ github.action_path }}/prepare.py \
+          --requirements-path ${{ inputs.requirements }} \
+          --template-file ${{ inputs.template-file }}
       env:
         TEMP_DIR: ${{ runner.temp }}
-      shell: bash
-      run: ${{ github.action_path }}/build.sh
