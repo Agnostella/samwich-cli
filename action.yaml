@@ -1,0 +1,24 @@
+name: Sam build with poetry
+description: Build python lambda artifacts using Poetry and SAM CLI
+
+inputs:
+  sam-build-workdir:
+    description: The working directory for the SAM CLI build command
+    required: false
+    default: ""
+
+outputs:
+  build-path:
+    description: The working directory for the SAM CLI build command
+    value: ${{ steps.build.outputs.path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      id: build
+      working-directory: ${{ inputs.sam-build-workdir }}
+      env:
+        TEMP_DIR: ${{ runner.temp }}
+      shell: bash
+      run: ${{ github.action_path }}/build.sh

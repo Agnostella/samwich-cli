@@ -1,0 +1,117 @@
+name: Test action
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  layer:
+    name: Build layer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: agnostella/pipx-install@v1
+        with:
+          package-specs: >-
+            poetry==2.1.2
+
+      - name: Create pyproject.toml and requirements.txt
+        run: |
+          pip install 'aws-sam-cli==1.136.0' > /dev/null
+          pipx inject poetry 'poetry-plugin-export==1.9.0'
+
+          cat << 'EOF' > pyproject.toml
+          [project]
+          name = "test"
+          dynamic = [ "dependencies" ]
+
+          [tool.poetry]
+          package-mode = false
+
+          [tool.poetry.dependencies]
+          python = "~3.12"
+          boto3 = "^1.37.26"
+
+          [build-system]
+          requires = ["poetry-core>=2.0.0"]
+          build-backend = "poetry.core.masonry.api"
+          EOF
+
+          # Create requirements.txt
+          mkdir ./layer
+          poetry export \
+            --only main \
+            --without-urls \
+            --format requirements.txt \
+            --output ./layer/requirements.txt
+
+      - name: SAM build layer
+        run: |
+          cat << 'EOF' > template.yml
+          AWSTemplateFormatVersion: '2010-09-09'
+          Transform: AWS::Serverless-2016-10-31
+
+          Resources:
+            TestLayer:
+              Type: AWS::Serverless::LayerVersion
+              Properties:
+                LayerName: test-layer
+                Description: Test layer
+                ContentUri: ./layer
+                CompatibleRuntimes:
+                  - python3.12
+              Metadata:
+                BuildMethod: python3.12
+          EOF
+
+          echo "::group::sam build"
+          sam build
+          echo "::endgroup::"
+
+          cd .aws-sam/build
+          echo "::group::Create layer zip"
+          zip --quiet -r "${GITHUB_WORKSPACE}"/sam-build-layer.zip .
+          cd "${GITHUB_WORKSPACE}"
+          echo "::endgroup::"
+
+          rm -rf .aws-sam layer
+
+      - name: Create layer using action
+        uses: ./
+
+      - name: Create layer zip
+        run: |
+          cd .aws-sam/build
+          zip --quiet -r "${GITHUB_WORKSPACE}"/action-layer.zip .
+          cd "${GITHUB_WORKSPACE}"
+
+      - name: Compare layer zips
+        run: |
+          diff -q sam-build-layer.zip action-layer.zip
+
+          if [ $? -ne 0 ]; then
+            echo "Layer zips are different"
+            exit 1
+          fi
+
+          echo "Layer zips are the same"
+
+          ls -l *.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: layers
+          path: '*.zip'
