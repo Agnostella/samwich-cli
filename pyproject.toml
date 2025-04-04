@@ -1,0 +1,58 @@
+[project]
+name = "samwich-cli"
+version = "0.1.0"
+description = "Add your description here"
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["AWS", "SAM", "CLI"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "aws-sam-cli (>=1.136.0,<1.137.0)",
+]
+
+[project.urls]
+repository = "https://github.com/agnostella/samwich-cli"
+
+[project.scripts]
+samwich-cli = "samwich_cli.cli:main"
+
+[tool.pycln]
+all = true
+
+[tool.ruff.lint]
+select = [
+    "D101", # Public class docstring
+    "D102", # Public method docstring
+    "D103", # Public function docstring
+    "DTZ",  # Date Time Zone
+    "F",    # flake8
+    "I",    # isort
+    "N",    # naming
+    "PERF", # Performance
+    "PTH",  # Pathlib
+    "RET",  # Return
+    "SIM",  # Simplify
+    "T20",  # No print statements
+    "TRY",  # Try/Except
+]
+exclude = ["tests/**.py"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
