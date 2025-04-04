@@ -9,6 +9,7 @@ class Context(NamedTuple):
     requirements: pathlib.Path
     template_file: pathlib.Path
     temp_dir: pathlib.Path
+    debug: bool
 
 
 class DependenciesState(NamedTuple):
