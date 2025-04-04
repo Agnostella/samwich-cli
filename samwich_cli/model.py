@@ -6,9 +6,16 @@ class Context(NamedTuple):
     """Context for the SAMWICH CLI."""
 
     workspace_root: pathlib.Path
-    requirements_path: pathlib.Path
+    requirements: pathlib.Path
     template_file: pathlib.Path
     temp_dir: pathlib.Path
+
+
+class DependenciesState(NamedTuple):
+    """State of the dependencies."""
+
+    layer_path: pathlib.Path | None
+    managed_requirements_paths: list[pathlib.Path]
 
 
 class ArtifactDetails(NamedTuple):
