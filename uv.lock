@@ -1519,14 +1519,18 @@ wheels = [
 
 [[package]]
 name = "samwich-cli"
-version = "0.1.0"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "aws-sam-cli" },
+    { name = "click" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "aws-sam-cli", specifier = ">=1.136.0,<1.137.0" }]
+requires-dist = [
+    { name = "aws-sam-cli", specifier = ">=1.136.0,<1.137.0" },
+    { name = "click", specifier = ">=8.1.8" },
+]
 
 [[package]]
 name = "setuptools"
