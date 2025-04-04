@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 import subprocess
 from typing import Final
@@ -16,18 +17,47 @@ def _prepare_requirements(
     ctx: model.Context,
     layers: list[model.ArtifactDetails],
     functions: list[model.ArtifactDetails],
-) -> pathlib.Path | None:
+) -> model.DependenciesState:
+    """
+    Prepare the requirements for the build.
+
+    Args:
+        ctx: The context for the build.
+        layers: The layers to be built.
+        functions: The functions to be built.
+
+    Returns:
+
+    """
     layer_path = None
+
+    copy_candidate_dirs = []
     if len(layers) == 1:
         layer_path = pathlib.Path(layers[0].codeuri)
-        utils.copy_requirements(ctx, layer_path)
+        copy_candidate_dirs = [layer_path]
     elif len(layers) == 0:
-        for fn in functions:
-            utils.copy_requirements(ctx, pathlib.Path(fn.codeuri))
+        copy_candidate_dirs = [pathlib.Path(fn.codeuri) for fn in functions]
     else:
-        logger.warning("More than one layer found, skipping poetry export")
+        copy_candidate_dirs = []
+        logger.warning(
+            "More than one layer found, skipping requirements copy. This may be supported in the future."
+        )
 
-    return layer_path
+    managed_reqs_paths = []
+    for candidate in copy_candidate_dirs:
+        copied_req_path = utils.copy_requirements(ctx, candidate)
+        if copied_req_path is None:
+            continue
+
+        logger.debug(
+            "Copied requirements.txt to %s",
+            str(os.path.relpath(start=ctx.workspace_root, path=copied_req_path)),
+        )
+        managed_reqs_paths.append(copied_req_path)
+
+    return model.DependenciesState(
+        layer_path=layer_path, managed_requirements_paths=managed_reqs_paths
+    )
 
 
 def _sam_build(ctx: model.Context) -> None:
@@ -67,9 +97,10 @@ def _update_function_structure(
         logger.debug(
             "Relative path for function %s: %s",
             fn.name,
-            relative_path,
+            os.path.relpath(start=ctx.workspace_root, path=relative_path),
         )
         utils.copy_contents(ctx, SAM_BUILD_DIR / fn.name, relative_path)
+        logger.info("")
 
 
 def main():
@@ -84,11 +115,19 @@ def main():
     layers = build_resources["layers"]
     functions = build_resources["functions"]
 
-    layer_path = _prepare_requirements(ctx, layers, functions)
+    dependencies_state = _prepare_requirements(ctx, layers, functions)
 
     _sam_build(ctx)
 
-    _update_layer_structure(ctx, layers, layer_path)
+    _update_layer_structure(ctx, layers, dependencies_state.layer_path)
 
-    # Process functions
     _update_function_structure(ctx, functions)
+
+    for req_path in dependencies_state.managed_requirements_paths:
+        if req_path.exists():
+            logger.debug(
+                "Removing %s", os.path.relpath(start=ctx.workspace_root, path=req_path)
+            )
+            req_path.unlink()
+        else:
+            logger.warning("Could not remove %s", req_path)

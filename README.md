@@ -28,7 +28,7 @@ SAMWICH CLI is a tool that simplifies working with AWS Serverless Application Mo
 
 ## Inspiration
 
-Many python projects do not use requirements.txt files, but instead use `pyproject.toml` with `poetry` or `uv`. This tool is designed to help those projects by automatically generating a `requirements.txt` file from the `pyproject.toml` file, and then copying it to the appropriate locations for AWS Lambda functions and layers.
+Many python projects do not use requirements.txt files, but instead use `pyproject.toml` with `poetry` or `uv`. This tool is designed to help those projects by copying the generated requirements.txt to the appropriate locations for AWS Lambda functions and layers.
 
 Also, using absolute python imports from the project root is not currently possible with AWS SAM (see https://github.com/aws/aws-sam-cli/issues/6593). This tool helps to maintain a consistent folder structure for your functions and layers, so the lambda functions can be individually packaged with the same folder structure as they are developed.
 
@@ -126,13 +126,13 @@ Resources:
 │           └── layer/
 │               └── lib/
 │                   └── utils.py
+```
 
 ## Example (without layers)
 
 ### Project Structure
 
 ```
-
 my-project/
 ├── functions/
 │ ├── sender/
@@ -141,8 +141,8 @@ my-project/
 │ └── app.py
 ├── pyproject.toml
 └── uv.lock
+```
 
-````
 ### SAM Template
 
 ```yaml
@@ -163,7 +163,7 @@ Resources:
       Handler: functions.receiver.app.lambda_handler
       Runtime: python3.12
       CodeUri: functions/receiver/
-````
+```
 
 ### Resulting Structure
 
@@ -191,12 +191,12 @@ uv export \
   --locked \
   --output-file requirements.txt
 
-samwich-cli --requirements-path requirements.txt --template-file template.yaml
+samwich-cli --requirements requirements.txt --template-file template.yaml
 ```
 
 ### Options
 
-- `--requirements-path`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
+- `--requirements`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
 - `--template-file`: Path to your AWS SAM template file. Defaults to `template.yaml` in the current directory.
 - `--debug`: Enable debug logging
 
