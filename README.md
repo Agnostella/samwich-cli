@@ -126,13 +126,13 @@ Resources:
 │           └── layer/
 │               └── lib/
 │                   └── utils.py
+```
 
 ## Example (without layers)
 
 ### Project Structure
 
 ```
-
 my-project/
 ├── functions/
 │ ├── sender/
@@ -141,8 +141,8 @@ my-project/
 │ └── app.py
 ├── pyproject.toml
 └── uv.lock
+```
 
-````
 ### SAM Template
 
 ```yaml
@@ -163,7 +163,7 @@ Resources:
       Handler: functions.receiver.app.lambda_handler
       Runtime: python3.12
       CodeUri: functions/receiver/
-````
+```
 
 ### Resulting Structure
 
