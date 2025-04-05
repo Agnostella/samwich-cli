@@ -2,6 +2,7 @@ import pathlib
 import subprocess
 from typing import Final
 
+import click
 from samcli.commands._utils import constants
 from samcli.commands.build import build_context
 from samcli.lib.providers import provider
@@ -11,9 +12,23 @@ from samwich_cli import model
 SAM_BUILD_DIR: Final[pathlib.Path] = pathlib.Path.cwd() / constants.DEFAULT_BUILD_DIR
 
 
-def sam_build(template_file: pathlib.Path) -> None:
+def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
     """Run the SAM build command."""
-    subprocess.check_call(["sam", "build", "--template-file", str(template_file)])
+    args = ("sam", "build", *sam_args)
+    if debug:
+        click.echo()
+        click.echo()
+    click.secho("Begin SAM build", fg="magenta")
+    click.secho("=" * 25, fg="magenta")
+    click.echo()
+    click.echo(f"+ {' '.join(args)}")
+    click.echo()
+    subprocess.check_call(args, shell=False)
+    click.echo()
+    click.secho("=" * 25, fg="magenta")
+    click.secho("End SAM build", fg="magenta")
+    click.echo()
+    click.echo()
 
 
 def get_build_resources(
