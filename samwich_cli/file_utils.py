@@ -43,11 +43,11 @@ def copy_requirements(
         return req_path
 
 
-def determine_relative_lambda_path(
+def determine_relative_artifact_path(
     ctx: model.Context, artifact_dir: str
 ) -> pathlib.Path:
-    """Get the relative path from the workspace directory to the artifact directory."""
-    return pathlib.Path(os.path.relpath(start=ctx.workspace_root, path=artifact_dir))
+    """Get the relative path from the source directory to the artifact directory."""
+    return pathlib.Path(os.path.relpath(start=ctx.source_dir, path=artifact_dir))
 
 
 def copy_contents(

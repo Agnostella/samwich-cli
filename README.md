@@ -38,7 +38,6 @@ pipx install samwich-cli
 ## Requirements
 
 - Python 3.9 or higher
-- Git (recommended for workspace detection)
 
 ## Features
 
@@ -76,10 +75,9 @@ samwich-cli --requirements requirements.txt --template-file template.yaml
 
 ```
 my-project/
-├── layer/
-│   └── lib/
-│       └── utils.py
-├── functions/
+├── src/
+│   ├── lib/
+│   │    └── utils.py
 │   ├── sender/
 │   │   └── app.py
 │   └── receiver/
@@ -99,18 +97,18 @@ Resources:
   SenderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: functions.sender.app.lambda_handler
+      Handler: sender.app.lambda_handler
       Runtime: python3.12
-      CodeUri: functions/sender/
+      CodeUri: src/sender/
       Layers:
         - !Ref MyLayer
 
   ReceiverFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: functions.receiver.app.lambda_handler
+      Handler: receiver.app.lambda_handler
       Runtime: python3.12
-      CodeUri: functions/receiver/
+      CodeUri: src/receiver/
       Layers:
         - !Ref MyLayer
 
@@ -118,11 +116,20 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: MyLayer
-      ContentUri: layer/
+      ContentUri: lib/
       CompatibleRuntimes:
         - python3.12
       Metadata:
         BuildMethod: python3.12
+```
+
+### SAMWICH CLI
+
+```bash
+uv export \
+  --locked \
+  --output-file requirements.txt
+samwich-cli --source-dir src --sam-args "--cached"
 ```
 
 ### Resulting Structure
@@ -131,20 +138,17 @@ Resources:
 .aws-sam/
 ├── build/
 │   ├── SenderFunction/
-│   │   └── functions/
-│   |       └── sender/
-│   |           └── app.py
+│   │   └── sender/
+│   |       └── app.py
 │   ├── ReceiverFunction/
-│   │   └── functions/
-│   |       └── receiver/
-|   |           └── app.py
+│   │   └── receiver/
+|   |       └── app.py
 │   └── MyLayer/
 │       └── python/
 │           ├── requirements.txt
 │           ├── < project dependencies >
-│           └── layer/
-│               └── lib/
-│                   └── utils.py
+│           └── lib/
+│               └── utils.py
 ```
 
 ## Example (without layers)
@@ -153,11 +157,11 @@ Resources:
 
 ```
 my-project/
-├── functions/
-│ ├── sender/
-│ │ └── app.py
-│ └── receiver/
-│ └── app.py
+├── src/
+│   ├── sender/
+│   │   └── app.py
+│   └── receiver/
+│       └── app.py
 ├── pyproject.toml
 └── uv.lock
 ```
@@ -172,16 +176,16 @@ Resources:
   SenderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: functions.sender.app.lambda_handler
+      Handler: src.sender.app.lambda_handler
       Runtime: python3.12
-      CodeUri: functions/sender/
+      CodeUri: src/sender/
 
   ReceiverFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: functions.receiver.app.lambda_handler
+      Handler: src.receiver.app.lambda_handler
       Runtime: python3.12
-      CodeUri: functions/receiver/
+      CodeUri: src/receiver/
 ```
 
 ### Resulting Structure
@@ -192,13 +196,13 @@ Resources:
 │   ├── SenderFunction/
 │   │   ├── requirements.txt
 │   │   ├── < project dependencies >
-│   │   └── functions/
+│   │   └── src/
 │   |       └── sender/
 │   |           └── app.py
 │   └── ReceiverFunction/
 │       ├── requirements.txt
 |       ├── < project dependencies >
-|       └── functions/
+|       └── src/
 │           └── receiver/
 │               └── app.py
 ```

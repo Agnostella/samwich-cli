@@ -91,7 +91,9 @@ def _update_layer_structure(
             "Updating layer folder structure: "
             + click.style(layer_path.name, fg="magenta")
         )
-        relative_path = file_utils.determine_relative_lambda_path(ctx, str(layer_path))
+        relative_path = file_utils.determine_relative_artifact_path(
+            ctx, str(layer_path)
+        )
         if ctx.debug:
             click.echo(f"Relative path for layer {layer_path}: {relative_path}")
         file_utils.copy_contents(
@@ -107,7 +109,7 @@ def _update_function_structure(
         click.echo(
             "Updating lambda folder structure: " + click.style(fn.name, fg="magenta")
         )
-        relative_path = file_utils.determine_relative_lambda_path(
+        relative_path = file_utils.determine_relative_artifact_path(
             ctx, artifact_dir=fn.codeuri
         )
         if ctx.debug:

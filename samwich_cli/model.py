@@ -2,9 +2,10 @@ import os
 import pathlib
 import platform
 import shlex
-import subprocess
 import tempfile
 from typing import Final, NamedTuple
+
+import click
 
 IS_WINDOWS: Final[bool] = platform.system().lower() == "windows"
 
@@ -17,6 +18,7 @@ class Context(NamedTuple):
     template_file: pathlib.Path
     temp_dir: pathlib.Path
     sam_args: tuple[str, ...]
+    source_dir: pathlib.Path
     debug: bool
 
     @staticmethod
@@ -25,18 +27,26 @@ class Context(NamedTuple):
         template_file: pathlib.Path,
         debug: bool,
         sam_args: str,
+        source_dir: pathlib.Path,
     ) -> "Context":
         """Create a context object from the command line arguments."""
-        repo_root: Final[str] = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"], text=True
-        ).strip()
-        workspace_root = pathlib.Path(
-            os.environ.get("SAMWICH_WORKSPACE", repo_root)
-        ).resolve()
-
+        workspace_env = os.environ.get("SAMWICH_WORKSPACE")
         temp_path = os.environ.get("SAMWICH_TEMP", tempfile.mkdtemp())
 
+        workspace_root = (
+            pathlib.Path(workspace_env).resolve()
+            if workspace_env
+            else pathlib.Path.cwd()
+        )
         template_file = template_file.resolve()
+
+        if source_dir.is_absolute() or not source_dir.resolve().is_relative_to(
+            workspace_root
+        ):
+            raise click.BadOptionUsage(
+                option_name="source_dir",
+                message=f"source_dir must be relative and a child of the workspace root: {workspace_root}",
+            )
 
         return Context(
             workspace_root=workspace_root,
@@ -44,6 +54,7 @@ class Context(NamedTuple):
             template_file=template_file,
             temp_dir=pathlib.Path(temp_path).resolve(),
             sam_args=Context._parse_sam_args(sam_args, template_file),
+            source_dir=workspace_root / source_dir,
             debug=debug,
         )
 
