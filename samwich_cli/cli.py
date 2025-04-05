@@ -30,6 +30,14 @@ from samwich_cli import controller, model
     help="Arbitrary SAM arguments to pass directly to the sam build command",
 )
 @click.option(
+    "--source-dir",
+    default=".",
+    type=click.Path(
+        exists=True, file_okay=False, dir_okay=True, path_type=pathlib.Path
+    ),
+    help="Path to the source directory for the code. When restructuring, only the child paths of this directory will be included.",
+)
+@click.option(
     "-q",
     "--debug",
     is_flag=True,
@@ -40,6 +48,7 @@ def main(
     template_file: pathlib.Path,
     debug: bool,
     sam_args: str,
+    source_dir: pathlib.Path,
 ) -> None:
     """SAMWICH CLI to prepare the build environment for AWS Lambda functions and layers."""
     controller.run(
@@ -47,6 +56,7 @@ def main(
             requirements=requirements,
             template_file=template_file,
             sam_args=sam_args,
+            source_dir=source_dir,
             debug=debug,
         )
     )

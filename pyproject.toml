@@ -1,6 +1,6 @@
 [project]
 name = "samwich-cli"
-version = "0.4.0"
+version = "0.5.0"
 description = "Add your description here"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -62,6 +62,12 @@ select = [
 ]
 exclude = ["tests/**.py"]
 
+[tool.hatch.build.targets.sdist]
+packages = ["samwich_cli"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["samwich_cli"]
+
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
