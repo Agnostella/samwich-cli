@@ -81,7 +81,7 @@ def _prepare_requirements(
 def _update_layer_structure(
     ctx: model.Context,
     layers: list[model.ArtifactDetails],
-    layer_path: pathlib.Path | None,
+    layer_path: "pathlib.Path | None",
 ) -> None:
     """Update the layer folder structure."""
     if layer_path and list(_.name for _ in layer_path.glob("*")) != [

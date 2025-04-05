@@ -59,7 +59,7 @@ class Context(NamedTuple):
 class DependenciesState(NamedTuple):
     """State of the dependencies."""
 
-    layer_path: pathlib.Path | None
+    layer_path: "pathlib.Path | None"
     managed_requirements_paths: list[pathlib.Path]
 
 

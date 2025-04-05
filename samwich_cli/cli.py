@@ -26,6 +26,7 @@ from samwich_cli import controller, model
 )
 @click.option(
     "--sam-args",
+    default="",
     help="Arbitrary SAM arguments to pass directly to the sam build command",
 )
 @click.option(
