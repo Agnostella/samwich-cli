@@ -1,6 +1,6 @@
 # SAMWICH CLI
 
-*A sandwich :sandwich: for `sam build`*
+_A sandwich :sandwich: for `sam build`_
 
 SAMWICH CLI is a tool that simplifies working with AWS Serverless Application Model (SAM) deployments, particularly focusing on dependency management and build processes for **Python** Lambda functions and layers.
 
@@ -13,17 +13,14 @@ SAMWICH CLI is a tool that simplifies working with AWS Serverless Application Mo
 - [Inspiration](#inspiration)
 - [Installation](#installation)
 - [Requirements](#requirements)
-- [Usage](#usage)
-  - [Example (with layers)](#example-with-layers)
-  - [Example (without layers)](#example-without-layers)
-  - [Basic Usage](#basic-usage)
-  - [Options](#options)
-  - [How It Works](#how-it-works)
-  - [Environment Variables](#environment-variables)
+- [Features](#features)
+- [Basic Usage](#basic-usage)
+- [Example (with layers)](#example-with-layers)
+- [Example (without layers)](#example-without-layers)
 - [License](#license)
 - [Contributing](#contributing)
-  - [Development](#development)
-  - [Code Quality](#code-quality)
+- [Development](#development)
+- [Code Quality](#code-quality)
   <!-- te -->
 
 ## Inspiration
@@ -50,6 +47,28 @@ The SAMWICH CLI:
 1. Copies your `requirements.txt` file to the appropriate locations for Lambda functions and layers.
 2. Executes `sam build` to build your AWS resources.
 3. Updates the folder structure of your functions and layers to maintain consistency.
+
+## Basic Usage
+
+```bash
+uv export \
+  --locked \
+  --output-file requirements.txt
+
+samwich-cli --requirements requirements.txt --template-file template.yaml
+```
+
+### Options
+
+- `--requirements`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
+- `--template-file`: Path to your AWS SAM template file. Defaults to `template.yaml` in the current directory.
+- `--sam-args`: Additional arguments to pass to `sam build`. For example, `--sam-args "--debug --use-container"`.
+- `--debug`: Enable debug logging
+
+## Environment Variables
+
+- `SAMWICH_WORKSPACE`: Override the default workspace root (defaults to git repository root)
+- `SAMWICH_TEMP`: Override the default temporary directory.
 
 ## Example (with layers)
 
@@ -146,7 +165,7 @@ my-project/
 ### SAM Template
 
 ```yaml
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: My SAM Application
 Resources:
@@ -183,36 +202,6 @@ Resources:
 │           └── receiver/
 │               └── app.py
 ```
-
-### Basic Usage
-
-```bash
-uv export \
-  --locked \
-  --output-file requirements.txt
-
-samwich-cli --requirements requirements.txt --template-file template.yaml
-```
-
-### Options
-
-- `--requirements`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
-- `--template-file`: Path to your AWS SAM template file. Defaults to `template.yaml` in the current directory.
-- `--debug`: Enable debug logging
-
-## How It Works
-
-SAMWICH CLI performs the following actions:
-
-1. Analyzes your SAM template to identify Lambda functions and layers
-2. Copies your requirements.txt file to the appropriate locations
-3. Executes `sam build` to build your AWS resources
-4. Updates the folder structure of your functions and layers to maintain consistency
-
-## Environment Variables
-
-- `SAMWICH_WORKSPACE`: Override the default workspace root (defaults to git repository root)
-- `SAMWICH_TEMP`: Override the default temporary directory.
 
 ## License
 
