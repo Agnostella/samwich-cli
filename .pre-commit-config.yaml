@@ -26,3 +26,13 @@ repos:
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
+
+  - repo: local
+    hooks:
+      - id: uv-check
+        name: uv check
+        entry: uv
+        args: [lock, --check]
+        language: system
+        files: (pyproject\.toml|uv\.lock)
+        pass_filenames: false

@@ -1,19 +1,14 @@
 import os
 import pathlib
-import subprocess
-import tempfile
-from typing import Final
 
 import click
 
 from samwich_cli import file_utils, model, sam_utils
 
 
-def run(requirements: pathlib.Path, template_file: pathlib.Path, debug: bool) -> None:
+def run(ctx: model.Context) -> None:
     """Run the SAMWICH CLI."""
-    ctx = _create_context(requirements, template_file, debug)
-
-    if debug:
+    if ctx.debug:
         click.echo(f"Context: {ctx._asdict()}")
 
     build_resources = sam_utils.get_build_resources(ctx.template_file)
@@ -22,18 +17,7 @@ def run(requirements: pathlib.Path, template_file: pathlib.Path, debug: bool) ->
 
     dependencies_state = _prepare_requirements(ctx, layers, functions)
 
-    if ctx.debug:
-        click.echo()
-        click.echo()
-    click.secho("Begin SAM build", fg="magenta")
-    click.secho("=" * 25, fg="magenta")
-    click.echo()
-    sam_utils.sam_build(ctx.template_file)
-    click.echo()
-    click.secho("=" * 25, fg="magenta")
-    click.secho("End SAM build", fg="magenta")
-    click.echo()
-    click.echo()
+    sam_utils.sam_build(ctx.sam_args, ctx.debug)
 
     _update_layer_structure(ctx, layers, dependencies_state.layer_path)
     _update_function_structure(ctx, functions)
@@ -44,27 +28,6 @@ def run(requirements: pathlib.Path, template_file: pathlib.Path, debug: bool) ->
                 f"Removing {os.path.relpath(start=ctx.workspace_root, path=req_path)}"
             )
         req_path.unlink(missing_ok=True)
-
-
-def _create_context(
-    requirements: pathlib.Path, template_file: pathlib.Path, debug: bool
-) -> model.Context:
-    """Create a context object from the command line arguments."""
-    repo_root: Final[str] = subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], text=True
-    ).strip()
-    workspace_root = pathlib.Path(
-        os.environ.get("SAMWICH_WORKSPACE", repo_root)
-    ).resolve()
-    return model.Context(
-        workspace_root=workspace_root,
-        requirements=requirements.resolve(),
-        template_file=template_file.resolve(),
-        temp_dir=pathlib.Path(
-            os.environ.get("SAMWICH_TEMP", tempfile.mkdtemp())
-        ).resolve(),
-        debug=debug,
-    )
 
 
 def _prepare_requirements(

@@ -25,8 +25,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv
+        uses: agnostella/pipx-install@v1
+        with:
+          package-specs: >-
+            'uv>=0.6.0,<1.0.0'
+
       - name: Run pre-commit
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
+
+      - name: Run pytest
+        run: |
+          uv sync
+          uv run -- pytest tests
 
   build:
     name: Build distribution
