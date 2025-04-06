@@ -1,0 +1,33 @@
+set shell := ["bash", "-uc"]
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+python_compatible := if `python --version` =~ '3\.(9|1\d)\.\d+$' { "true" } else { error("Python 3.9 or higher is required") }
+
+requirements_path := 'requirements.txt'
+cfn_template_path := join('cloudformation', 'template.yaml')
+cfn_stack_name := 'demo-stack'
+
+alias h := help
+
+help:
+    @just --list
+
+# Export uv project dependencies to requirements.txt, then execute the samwich build command
+[group('build')]
+build-with-uv: && samwich-build
+    uv export --quiet --locked --output-file {{ requirements_path }}
+
+# Export poetry project dependencies to requirements.txt, then execute the samwich build command
+[group('build')]
+build-with-poetry: && samwich-build
+    poetry export --output {{ requirements_path }}
+
+# Execute the samwich build command
+[group('build')]
+samwich-build:
+    samwich-cli --requirements {{ requirements_path }} --template-file {{ cfn_template_path }}
+
+# Deploy the CloudFormation stack
+[group('deploy')]
+sam-deploy:
+    sam deploy --stack-name {{ cfn_stack_name }} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM

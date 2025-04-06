@@ -15,13 +15,13 @@ SAMWICH CLI is a tool that simplifies working with AWS Serverless Application Mo
 - [Requirements](#requirements)
 - [Features](#features)
 - [Basic Usage](#basic-usage)
-- [Example (with layers)](#example-with-layers)
-- [Example (without layers)](#example-without-layers)
+- [Examples and Advanced Usage](#examples-and-advanced-usage)
 - [License](#license)
 - [Contributing](#contributing)
 - [Development](#development)
 - [Code Quality](#code-quality)
-  <!-- te -->
+
+<!-- te -->
 
 ## Inspiration
 
@@ -50,10 +50,6 @@ The SAMWICH CLI:
 ## Basic Usage
 
 ```bash
-uv export \
-  --locked \
-  --output-file requirements.txt
-
 samwich-cli --requirements requirements.txt --template-file template.yaml
 ```
 
@@ -62,6 +58,7 @@ samwich-cli --requirements requirements.txt --template-file template.yaml
 - `--requirements`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
 - `--template-file`: Path to your AWS SAM template file. Defaults to `template.yaml` in the current directory.
 - `--sam-args`: Additional arguments to pass to `sam build`. For example, `--sam-args "--debug --use-container"`.
+- `--source-dir`: Path to the source directory for the code. When restructuring, only the child paths of this directory will be included.
 - `--debug`: Enable debug logging
 
 ## Environment Variables
@@ -69,147 +66,9 @@ samwich-cli --requirements requirements.txt --template-file template.yaml
 - `SAMWICH_WORKSPACE`: Override the default workspace root (defaults to git repository root)
 - `SAMWICH_TEMP`: Override the default temporary directory.
 
-## Example (with layers)
+## Examples and Advanced Usage
 
-### Project Structure
-
-```
-my-project/
-├── src/
-│   ├── lib/
-│   │    └── utils.py
-│   ├── sender/
-│   │   └── app.py
-│   └── receiver/
-│       └── app.py
-├── pyproject.toml
-└── uv.lock
-```
-
-### SAM Template
-
-```yaml
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
-Description: My SAM Application
-
-Resources:
-  SenderFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: sender.app.lambda_handler
-      Runtime: python3.12
-      CodeUri: src/sender/
-      Layers:
-        - !Ref MyLayer
-
-  ReceiverFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: receiver.app.lambda_handler
-      Runtime: python3.12
-      CodeUri: src/receiver/
-      Layers:
-        - !Ref MyLayer
-
-  MyLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: MyLayer
-      ContentUri: lib/
-      CompatibleRuntimes:
-        - python3.12
-      Metadata:
-        BuildMethod: python3.12
-```
-
-### SAMWICH CLI
-
-```bash
-uv export \
-  --locked \
-  --output-file requirements.txt
-samwich-cli --source-dir src --sam-args "--cached"
-```
-
-### Resulting Structure
-
-```
-.aws-sam/
-├── build/
-│   ├── SenderFunction/
-│   │   └── sender/
-│   |       └── app.py
-│   ├── ReceiverFunction/
-│   │   └── receiver/
-|   |       └── app.py
-│   └── MyLayer/
-│       └── python/
-│           ├── requirements.txt
-│           ├── < project dependencies >
-│           └── lib/
-│               └── utils.py
-```
-
-## Example (without layers)
-
-### Project Structure
-
-```
-my-project/
-├── src/
-│   ├── sender/
-│   │   └── app.py
-│   └── receiver/
-│       └── app.py
-├── pyproject.toml
-└── uv.lock
-```
-
-### SAM Template
-
-```yaml
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
-Description: My SAM Application
-Resources:
-  SenderFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src.sender.app.lambda_handler
-      Runtime: python3.12
-      CodeUri: src/sender/
-
-  ReceiverFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src.receiver.app.lambda_handler
-      Runtime: python3.12
-      CodeUri: src/receiver/
-```
-
-### Resulting Structure
-
-```
-.aws-sam/
-├── build/
-│   ├── SenderFunction/
-│   │   ├── requirements.txt
-│   │   ├── < project dependencies >
-│   │   └── src/
-│   |       └── sender/
-│   |           └── app.py
-│   └── ReceiverFunction/
-│       ├── requirements.txt
-|       ├── < project dependencies >
-|       └── src/
-│           └── receiver/
-│               └── app.py
-```
-
-## License
-
-This project is licensed under the MIT License.
+Open the [docs](docs/) folder for examples and detailed usage.
 
 ## Contributing
 
@@ -217,14 +76,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Development
 
-1. Clone the repository
-2. Install development dependencies with your package manager of choice
-3. Install pre-commit hooks: `pre-commit install`
+Refer to the [Justfile](./Justfile) for development tasks. It is recommended to `pipx install rust-just` to run the tasks but you can also copy the commands from the Justfile and run them manually.
 
 ### Code Quality
 
-This project uses pre-commit hooks for code quality, including:
+This project uses `pre-commit` hooks for code quality, including:
 
-- Ruff for linting and formatting
-- pycln for removing unused imports
-- Various pre-commit hooks for file consistency
+- `ruff` for linting and formatting
+- `pycln` for removing unused imports
+- Various `pre-commit` hooks for file consistency
