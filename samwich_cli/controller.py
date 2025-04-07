@@ -1,5 +1,6 @@
 import os
 import pathlib
+import shutil
 
 import click
 
@@ -44,7 +45,7 @@ def _prepare_requirements(
 
     copy_candidate_dirs = []
     if len(layers) == 1:
-        layer_path = ctx.template_file.parent / pathlib.Path(layers[0].codeuri)
+        layer_path = pathlib.Path(layers[0].codeuri)
         copy_candidate_dirs = [layer_path]
     elif len(layers) == 0:
         copy_candidate_dirs = [pathlib.Path(fn.codeuri) for fn in functions]
@@ -80,11 +81,20 @@ def _cleanup_requirements(
 ) -> None:
     """Cleanup the requirements."""
     for req_path in dependencies_state.managed_requirements_paths:
-        if ctx.debug:
-            click.echo(
-                f"Removing {os.path.relpath(start=ctx.workspace_root, path=req_path)}"
-            )
-        req_path.unlink(missing_ok=True)
+        if list(_.name for _ in req_path.parent.glob(pattern="*")) == [
+            "requirements.txt"
+        ]:
+            if ctx.debug:
+                click.echo(
+                    f"Removing {os.path.relpath(start=ctx.workspace_root, path=req_path.parent)}"
+                )
+            shutil.rmtree(req_path.parent, ignore_errors=True)
+        else:
+            if ctx.debug:
+                click.echo(
+                    f"Removing {os.path.relpath(start=ctx.workspace_root, path=req_path)}"
+                )
+            req_path.unlink(missing_ok=True)
     click.echo()
 
 
@@ -94,9 +104,7 @@ def _update_layer_structure(
     layer_path: "pathlib.Path | None",
 ) -> None:
     """Update the layer folder structure."""
-    if layer_path and list(_.name for _ in layer_path.glob("*")) != [
-        "requirements.txt"
-    ]:
+    if layer_path and layer_path.exists():
         click.echo(
             "Updating layer folder structure: "
             + click.style(layers[0].name, fg="magenta")
@@ -106,10 +114,10 @@ def _update_layer_structure(
         )
         if ctx.debug:
             click.echo(
-                f"{file_utils.INDENT}Relative path: {os.path.relpath(start=ctx.workspace_root, path=relative_path)}"
+                f"{file_utils.INDENT}Relative path: {os.path.relpath(start=ctx.source_dir, path=relative_path)}"
             )
         file_utils.restructure_layer(
-            ctx, sam_utils.SAM_BUILD_DIR / layers[0].name, relative_path
+            ctx, sam_utils.SAM_BUILD_DIR / layers[0].name, relative_path, layer_path
         )
         click.echo("")
 
@@ -122,13 +130,23 @@ def _update_function_structure(
         click.echo(
             "Updating lambda folder structure: " + click.style(fn.name, fg="magenta")
         )
-        artifact_dir = ctx.template_file.parent / fn.codeuri
-        relative_path = file_utils.determine_relative_artifact_path(ctx, artifact_dir)
+        relative_path = file_utils.determine_relative_artifact_path(
+            ctx, pathlib.Path(fn.codeuri)
+        )
+        if relative_path == pathlib.Path():
+            click.echo(
+                f"{file_utils.INDENT}Source directory is the same as the artifact directory."
+            )
+            continue
+
         if ctx.debug:
             click.echo(
-                f"{file_utils.INDENT}Relative path: {os.path.relpath(start=ctx.workspace_root, path=relative_path)}"
+                f"{file_utils.INDENT}Relative path: {os.path.relpath(start=ctx.source_dir, path=relative_path)}"
             )
         file_utils.restructure_lambda_function(
-            ctx, sam_utils.SAM_BUILD_DIR / fn.name, relative_path
+            ctx,
+            sam_utils.SAM_BUILD_DIR / fn.name,
+            relative_path,
+            pathlib.Path(fn.codeuri),
         )
         click.echo("")
