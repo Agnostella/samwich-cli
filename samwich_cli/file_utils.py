@@ -30,7 +30,7 @@ def copy_requirements(
     if not ctx.requirements.exists():
         if ctx.debug:
             click.echo(
-                f"No requirements found at {str(ctx.requirements)}. Skipping copy to "
+                f"No requirements found at {ctx.requirements}. Skipping copy to "
                 f"{os.path.relpath(start=ctx.workspace_root, path=target_dir)}"
             )
         return None
@@ -46,18 +46,42 @@ def copy_requirements(
 
 
 def determine_relative_artifact_path(
-    ctx: model.Context, artifact_dir: str
+    ctx: model.Context, artifact_dir: pathlib.Path
 ) -> pathlib.Path:
     """Get the relative path from the source directory to the artifact directory."""
     return pathlib.Path(os.path.relpath(start=ctx.source_dir, path=artifact_dir))
 
 
-def copy_contents(
-    ctx: model.Context, source_path: pathlib.Path, relative_path: pathlib.Path
+def restructure_layer(
+    ctx: model.Context, build_path: pathlib.Path, relative_path: pathlib.Path
+) -> None:
+    """Copy contents directly to the build path."""
+    source_path = ctx.workspace_root / relative_path
+    if ctx.debug:
+        source_contents = list(
+            os.path.relpath(start=source_path, path=p)
+            for p in source_path.glob(GLOB_PATTERN)
+        )
+        click.secho(f"{INDENT}Source path contents:", fg="cyan")
+        click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
+
+    target_dir = build_path / "python" / source_path.name
+    shutil.copytree(source_path, target_dir, dirs_exist_ok=False)
+
+    if ctx.debug:
+        click.echo(
+            f"{INDENT}Copied {source_path} to {target_dir}",
+        )
+
+
+def restructure_lambda_function(
+    ctx: model.Context, build_path: pathlib.Path, relative_path: pathlib.Path
 ) -> None:
     """Copy contents using a scratch directory approach."""
     scratch_dir = ctx.temp_dir / "scratch"
     scratch_dir.mkdir(parents=True, exist_ok=True)
+    source_path = ctx.workspace_root / relative_path
+
     with tempfile.TemporaryDirectory(dir=scratch_dir) as scratch_temp:
         scratch_temp = pathlib.Path(scratch_temp)
 
@@ -67,17 +91,14 @@ def copy_contents(
 
         if ctx.debug:
             source_contents = list(
-                os.path.relpath(start=ctx.workspace_root, path=p)
+                os.path.relpath(start=source_path, path=p)
                 for p in source_path.glob(GLOB_PATTERN)
             )
             click.secho(f"{INDENT}Source path contents:", fg="cyan")
             click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
 
         for item in source_path.glob("*"):
-            if item.is_dir():
-                shutil.copytree(item, scratch_artifact / item.name, dirs_exist_ok=False)
-            else:
-                shutil.copy(item, scratch_artifact / item.name)
+            shutil.move(build_path / item.name, scratch_artifact)
 
         if ctx.debug:
             scratch_contents = list(
@@ -87,27 +108,10 @@ def copy_contents(
             click.secho(f"{INDENT}Scratch artifact contents:", fg="cyan")
             click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(scratch_contents))
 
-        # Remove original
-        shutil.rmtree(source_path)
-
-        # Copy all contents back
-        for item in scratch_temp.glob("*"):
-            if ctx.debug:
-                click.echo(
-                    f"{INDENT}Copying {os.path.relpath(start=scratch_temp, path=item)} to "
-                    f"{os.path.relpath(start=ctx.workspace_root, path=source_path / item.name)}",
-                )
-            if item.is_dir():
-                shutil.copytree(item, source_path / item.name, dirs_exist_ok=False)
-            else:
-                shutil.copy(item, source_path / item.name)
-
+        # Move all contents back
+        shutil.move(scratch_temp / relative_path.parts[0], build_path)
         if ctx.debug:
-            contents_after_copy = list(
-                os.path.relpath(start=ctx.workspace_root, path=p)
-                for p in source_path.glob(GLOB_PATTERN)
-            )
-            click.secho(f"{INDENT}Source path contents after copy:", fg="cyan")
             click.echo(
-                f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(contents_after_copy)
+                f"{INDENT}Copied {os.path.relpath(start=ctx.temp_dir, path=scratch_artifact)} to "
+                f"{build_path}",
             )

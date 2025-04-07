@@ -1,6 +1,6 @@
 [project]
 name = "samwich-cli"
-version = "0.7.0"
+version = "0.8.0"
 description = "A CLI tool to streamline AWS SAM deployments for Python Lambda functions by managing dependencies, executing sam build, and maintaining consistent folder structures."
 license = "MIT"
 license-files = ["LICENSE"]

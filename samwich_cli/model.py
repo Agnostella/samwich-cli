@@ -65,7 +65,10 @@ class Context(NamedTuple):
 
     @staticmethod
     def _parse_sam_args(sam_args: str, template_file: pathlib.Path) -> tuple[str, ...]:
-        sam_args_temp = ["--template-file", str(template_file)]
+        sam_args_temp = [
+            "--template-file",
+            os.path.relpath(start=pathlib.Path.cwd(), path=template_file),
+        ]
         if sam_args:
             # Stripping the single quote that can be parsed from several shells
             sam_args_temp.extend(shlex.split(sam_args.strip("'"), posix=not IS_WINDOWS))
