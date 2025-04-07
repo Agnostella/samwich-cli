@@ -8,7 +8,7 @@ import click
 
 from samwich_cli import model
 
-GLOB_PATTERN: Final[str] = "**/*"
+RECURSIVE_GLOB_PATTERN: Final[str] = "**/*"
 INDENT: Final[str] = " " * 4
 LIST_INDENT: Final[str] = " " * 6
 
@@ -36,7 +36,15 @@ def copy_requirements(
         return None
 
     try:
-        target_dir.mkdir(parents=True, exist_ok=True)
+        if not target_dir.exists():
+            target_dir.mkdir(parents=True, exist_ok=False)
+            click.echo(
+                "Creating directory for requirements.txt: "
+                + click.style(
+                    os.path.relpath(start=ctx.workspace_root, path=target_dir),
+                    fg="magenta",
+                )
+            )
         req_path = target_dir / "requirements.txt"
         shutil.copy(ctx.requirements, req_path)
     except shutil.SameFileError:
@@ -53,34 +61,38 @@ def determine_relative_artifact_path(
 
 
 def restructure_layer(
-    ctx: model.Context, build_path: pathlib.Path, relative_path: pathlib.Path
+    ctx: model.Context,
+    build_path: pathlib.Path,
+    relative_path: pathlib.Path,
+    code_uri: pathlib.Path,
 ) -> None:
     """Copy contents directly to the build path."""
-    source_path = ctx.workspace_root / relative_path
     if ctx.debug:
         source_contents = list(
-            os.path.relpath(start=source_path, path=p)
-            for p in source_path.glob(GLOB_PATTERN)
+            os.path.relpath(start=ctx.workspace_root, path=p)
+            for p in code_uri.glob(RECURSIVE_GLOB_PATTERN)
         )
         click.secho(f"{INDENT}Source path contents:", fg="cyan")
         click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
 
-    target_dir = build_path / "python" / source_path.name
-    shutil.copytree(source_path, target_dir, dirs_exist_ok=False)
+    target_dir = build_path / "python" / relative_path
+    shutil.copytree(code_uri, target_dir, dirs_exist_ok=False)
 
     if ctx.debug:
         click.echo(
-            f"{INDENT}Copied {source_path} to {target_dir}",
+            f"{INDENT}Copied {code_uri} to {target_dir}",
         )
 
 
 def restructure_lambda_function(
-    ctx: model.Context, build_path: pathlib.Path, relative_path: pathlib.Path
+    ctx: model.Context,
+    build_path: pathlib.Path,
+    relative_path: pathlib.Path,
+    code_uri: pathlib.Path,
 ) -> None:
     """Copy contents using a scratch directory approach."""
     scratch_dir = ctx.temp_dir / "scratch"
     scratch_dir.mkdir(parents=True, exist_ok=True)
-    source_path = ctx.workspace_root / relative_path
 
     with tempfile.TemporaryDirectory(dir=scratch_dir) as scratch_temp:
         scratch_temp = pathlib.Path(scratch_temp)
@@ -90,20 +102,28 @@ def restructure_lambda_function(
         scratch_artifact.mkdir(parents=True, exist_ok=True)
 
         if ctx.debug:
+            build_contents = list(
+                os.path.relpath(start=ctx.workspace_root, path=p)
+                for p in build_path.glob(RECURSIVE_GLOB_PATTERN)
+            )
+            click.secho(f"{INDENT}Build contents:", fg="cyan")
+            click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(build_contents))
+
+        if ctx.debug:
             source_contents = list(
-                os.path.relpath(start=source_path, path=p)
-                for p in source_path.glob(GLOB_PATTERN)
+                os.path.relpath(start=ctx.workspace_root, path=p)
+                for p in code_uri.glob(RECURSIVE_GLOB_PATTERN)
             )
             click.secho(f"{INDENT}Source path contents:", fg="cyan")
             click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
 
-        for item in source_path.glob("*"):
+        for item in code_uri.glob(pattern="*"):
             shutil.move(build_path / item.name, scratch_artifact)
 
         if ctx.debug:
             scratch_contents = list(
                 os.path.relpath(start=scratch_temp, path=p)
-                for p in scratch_artifact.glob(GLOB_PATTERN)
+                for p in scratch_artifact.glob(RECURSIVE_GLOB_PATTERN)
             )
             click.secho(f"{INDENT}Scratch artifact contents:", fg="cyan")
             click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(scratch_contents))
