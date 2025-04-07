@@ -2,6 +2,7 @@ import os
 import pathlib
 import platform
 import shlex
+import subprocess
 import tempfile
 from typing import Final, NamedTuple
 
@@ -13,35 +14,39 @@ IS_WINDOWS: Final[bool] = platform.system().lower() == "windows"
 class Context(NamedTuple):
     """Context for the SAMWICH CLI."""
 
-    workspace_root: pathlib.Path
-    requirements: pathlib.Path
-    template_file: pathlib.Path
-    temp_dir: pathlib.Path
+    debug: bool
+    requirements: "pathlib.Path | None"
     sam_args: tuple[str, ...]
     source_dir: pathlib.Path
-    debug: bool
+    temp_dir: pathlib.Path
+    template_file: pathlib.Path
+    workspace_root: pathlib.Path
 
     @staticmethod
     def build(
-        requirements: pathlib.Path,
-        template_file: pathlib.Path,
         debug: bool,
+        requirements: "pathlib.Path | None",
         sam_args: str,
-        source_dir: pathlib.Path,
+        source_dir: "pathlib.Path | None",
+        template_file: pathlib.Path,
+        workspace_root: "pathlib.Path | None",
     ) -> "Context":
         """Create a context object from the command line arguments."""
-        workspace_env = os.environ.get("SAMWICH_WORKSPACE")
         temp_path = os.environ.get("SAMWICH_TEMP", tempfile.mkdtemp())
 
-        workspace_root = (
-            pathlib.Path(workspace_env).resolve()
-            if workspace_env
-            else pathlib.Path.cwd()
-        )
+        try:
+            default_workspace = subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"], text=True
+            ).strip()
+        except Exception:
+            default_workspace = str(pathlib.Path.cwd())
+
+        workspace_root = pathlib.Path(workspace_root or default_workspace).resolve()
         template_file = template_file.resolve()
 
-        if source_dir.is_absolute() or not source_dir.resolve().is_relative_to(
-            workspace_root
+        if source_dir and (
+            source_dir.is_absolute()
+            or not source_dir.resolve().is_relative_to(workspace_root)
         ):
             raise click.BadOptionUsage(
                 option_name="source_dir",
@@ -50,11 +55,11 @@ class Context(NamedTuple):
 
         return Context(
             workspace_root=workspace_root,
-            requirements=requirements.resolve(),
+            requirements=requirements.resolve() if requirements else None,
             template_file=template_file,
             temp_dir=pathlib.Path(temp_path).resolve(),
             sam_args=Context._parse_sam_args(sam_args, template_file),
-            source_dir=workspace_root / source_dir,
+            source_dir=workspace_root / source_dir if source_dir else workspace_root,
             debug=debug,
         )
 

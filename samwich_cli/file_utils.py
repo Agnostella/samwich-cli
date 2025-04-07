@@ -25,6 +25,8 @@ def copy_requirements(
     Returns:
         pathlib.Path | None: The path to the destination requirements.txt file, or None if no requirements were copied.
     """
+    if ctx.requirements is None:
+        return None
     if not ctx.requirements.exists():
         if ctx.debug:
             click.echo(

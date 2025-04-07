@@ -55,16 +55,16 @@ samwich-cli --requirements requirements.txt --template-file template.yaml
 
 ### Options
 
+- `--template-file`: Path to yours AWS SAM template file. Defaults to `template.yaml` in the current directory.
 - `--requirements`: Path to your Python requirements.txt file. Defaults to `requirements.txt` in the current directory.
-- `--template-file`: Path to your AWS SAM template file. Defaults to `template.yaml` in the current directory.
-- `--sam-args`: Additional arguments to pass to `sam build`. For example, `--sam-args "--debug --use-container"`.
+- `--workspace-root`: Path to the workspace root.
 - `--source-dir`: Path to the source directory for the code. When restructuring, only the child paths of this directory will be included.
+- `--sam-args`: Additional arguments to pass to `sam build`. For example, `--sam-args "--debug --use-container"`.
 - `--debug`: Enable debug logging
 
-## Environment Variables
+### Environment Variables
 
-- `SAMWICH_WORKSPACE`: Override the default workspace root (defaults to git repository root)
-- `SAMWICH_TEMP`: Override the default temporary directory.
+All options can also be set using environment variables. The environment variable names are the same as the option names, but prefixed with `SAMWICH`, in uppercase, and with underscores instead of dashes. For example, `--template-file` can be set using the `SAMWICH_TEMPLATE_FILE` environment variable.
 
 ## Examples and Advanced Usage
 

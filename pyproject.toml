@@ -1,6 +1,6 @@
 [project]
 name = "samwich-cli"
-version = "0.6.0"
+version = "0.7.0"
 description = "A CLI tool to streamline AWS SAM deployments for Python Lambda functions by managing dependencies, executing sam build, and maintaining consistent folder structures."
 license = "MIT"
 license-files = ["LICENSE"]
@@ -26,20 +26,19 @@ dependencies = [
     "aws-sam-cli (>=1.136.0,<1.137.0)",
     "click~=8.1.8",
 ]
-
-[project.urls]
-repository = "https://github.com/agnostella/samwich-cli"
-
-[project.scripts]
-samwich-cli = "samwich_cli.cli:main"
+urls.repository = "https://github.com/agnostella/samwich-cli"
+scripts.samwich-cli = "samwich_cli.main:cli"
 
 [dependency-groups]
 dev = [
     "pytest~=8.3.5",
 ]
 
-[tool.setuptools]
-packages = ["my_package"]
+[tool.hatch.build.targets.sdist]
+packages = ["samwich_cli"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["samwich_cli"]
 
 [tool.pycln]
 all = true
@@ -61,12 +60,6 @@ select = [
     "TRY",  # Try/Except
 ]
 exclude = ["tests/**.py"]
-
-[tool.hatch.build.targets.sdist]
-packages = ["samwich_cli"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["samwich_cli"]
 
 [build-system]
 requires = ["hatchling"]
