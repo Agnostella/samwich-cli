@@ -77,6 +77,7 @@ def restructure_layer(
 
     target_dir = build_path / "python" / relative_path
     shutil.copytree(code_uri, target_dir, dirs_exist_ok=False)
+    remove_compiled_cache(target_dir)
 
     if ctx.debug:
         click.echo(
@@ -118,7 +119,12 @@ def restructure_lambda_function(
             click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
 
         for item in code_uri.glob(pattern="*"):
-            shutil.move(build_path / item.name, scratch_artifact)
+            if (build_path / item.name).exists():
+                shutil.move(build_path / item.name, scratch_artifact)
+            elif ctx.debug:
+                click.echo(
+                    f"{INDENT}Item {item} does not exist in the build path, skipping."
+                )
 
         if ctx.debug:
             scratch_contents = list(
@@ -135,3 +141,15 @@ def restructure_lambda_function(
                 f"{INDENT}Copied {os.path.relpath(start=ctx.temp_dir, path=scratch_artifact)} to "
                 f"{build_path}",
             )
+
+
+def remove_compiled_cache(target_dir: pathlib.Path) -> None:
+    """Remove compiled cache files."""
+    for req_path in target_dir.glob(RECURSIVE_GLOB_PATTERN):
+        if not req_path.exists():
+            # It may have been deleted in a previous loop iteration
+            continue
+        if req_path.is_dir() and req_path.name == "__pycache__":
+            shutil.rmtree(req_path, ignore_errors=True)
+        elif req_path.is_file() and req_path.name.endswith(".pyc"):
+            req_path.unlink(missing_ok=True)

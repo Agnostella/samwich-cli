@@ -6,6 +6,8 @@ Install `just` (`pipx install rust-just`) and refer to the [Justfile](./Justfile
 
 ## Example (with layers)
 
+This example excludes the src path segment from the build using the --source-dir option.
+
 ### Project Structure
 
 ```
@@ -18,6 +20,7 @@ my-project/
 │   └── receiver/
 │       └── app.py
 ├── pyproject.toml
+├── template.yaml
 └── uv.lock
 ```
 
@@ -98,6 +101,7 @@ my-project/
 │   └── receiver/
 │       └── app.py
 ├── pyproject.toml
+├── template.yaml
 └── uv.lock
 ```
 
