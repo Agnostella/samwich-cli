@@ -86,4 +86,5 @@ class ArtifactDetails(NamedTuple):
     """Details of the Layer or Lambda function artifact."""
 
     codeuri: str
+    full_path: str
     name: str

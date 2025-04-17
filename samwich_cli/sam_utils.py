@@ -61,13 +61,13 @@ def get_build_resources(
 
     return {
         "layers": [
-            model.ArtifactDetails(codeuri=r.codeuri, name=r.name)
+            model.ArtifactDetails(codeuri=r.codeuri, full_path=r.full_path, name=r.name)
             for r in resources.layers
-            if r.codeuri and r.name and _is_python_resource(r)
+            if isinstance(r.codeuri, str) and _is_python_resource(r)
         ],
         "functions": [
-            model.ArtifactDetails(codeuri=r.codeuri, name=r.name)
+            model.ArtifactDetails(codeuri=r.codeuri, full_path=r.full_path, name=r.name)
             for r in resources.functions
-            if r.codeuri and r.name and _is_python_resource(r)
+            if isinstance(r.codeuri, str) and _is_python_resource(r)
         ],
     }
