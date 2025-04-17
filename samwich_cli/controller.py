@@ -117,7 +117,10 @@ def _update_layer_structure(
                 f"{file_utils.INDENT}Relative path: {os.path.relpath(start=ctx.source_dir, path=relative_path)}"
             )
         file_utils.restructure_layer(
-            ctx, sam_utils.SAM_BUILD_DIR / layers[0].name, relative_path, layer_path
+            ctx,
+            sam_utils.SAM_BUILD_DIR / layers[0].full_path,
+            relative_path,
+            layer_path,
         )
         click.echo("")
 
@@ -145,7 +148,7 @@ def _update_function_structure(
             )
         file_utils.restructure_lambda_function(
             ctx,
-            sam_utils.SAM_BUILD_DIR / fn.name,
+            sam_utils.SAM_BUILD_DIR / fn.full_path,
             relative_path,
             pathlib.Path(fn.codeuri),
         )

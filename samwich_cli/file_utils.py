@@ -77,7 +77,7 @@ def restructure_layer(
 
     target_dir = build_path / "python" / relative_path
     shutil.copytree(code_uri, target_dir, dirs_exist_ok=False)
-    remove_compiled_cache(target_dir)
+    _remove_compiled_cache(target_dir)
 
     if ctx.debug:
         click.echo(
@@ -143,7 +143,7 @@ def restructure_lambda_function(
             )
 
 
-def remove_compiled_cache(target_dir: pathlib.Path) -> None:
+def _remove_compiled_cache(target_dir: pathlib.Path) -> None:
     """Remove compiled cache files."""
     for req_path in target_dir.glob(RECURSIVE_GLOB_PATTERN):
         if not req_path.exists():
