@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pathlib
 
 import click
@@ -58,11 +60,11 @@ CONTEXT_SETTINGS = {
 )
 def cli(
     debug: bool,
-    requirements: "pathlib.Path | None",
+    requirements: pathlib.Path | None,
     sam_args: str,
-    source_dir: "pathlib.Path | None",
+    source_dir: pathlib.Path | None,
     template_file: pathlib.Path,
-    workspace_root: "pathlib.Path | None",
+    workspace_root: pathlib.Path | None,
 ) -> None:
     """SAMWICH CLI to prepare the build environment for AWS Lambda functions and layers."""
     controller.run(
