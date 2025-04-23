@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import shutil
@@ -101,7 +103,7 @@ def _cleanup_requirements(
 def _update_layer_structure(
     ctx: model.Context,
     layers: list[model.ArtifactDetails],
-    layer_path: "pathlib.Path | None",
+    layer_path: pathlib.Path | None,
 ) -> None:
     """Update the layer folder structure."""
     if layer_path and layer_path.exists():

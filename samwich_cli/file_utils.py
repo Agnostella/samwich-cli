@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import shutil
@@ -15,7 +17,7 @@ LIST_INDENT: Final[str] = " " * 6
 
 def copy_requirements(
     ctx: model.Context, target_dir: pathlib.Path
-) -> "pathlib.Path | None":
+) -> pathlib.Path | None:
     """
     Copy requirements.txt to the target directory.
 

@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import platform
 import shlex
 import subprocess
 import tempfile
-from typing import Final, NamedTuple
+from typing import TYPE_CHECKING, Final, NamedTuple
+
+if TYPE_CHECKING:
+    from typing import Self
 
 import click
 
@@ -15,7 +20,7 @@ class Context(NamedTuple):
     """Context for the SAMWICH CLI."""
 
     debug: bool
-    requirements: "pathlib.Path | None"
+    requirements: pathlib.Path | None
     sam_args: tuple[str, ...]
     source_dir: pathlib.Path
     temp_dir: pathlib.Path
@@ -25,12 +30,12 @@ class Context(NamedTuple):
     @staticmethod
     def build(
         debug: bool,
-        requirements: "pathlib.Path | None",
+        requirements: pathlib.Path | None,
         sam_args: str,
-        source_dir: "pathlib.Path | None",
+        source_dir: pathlib.Path | None,
         template_file: pathlib.Path,
-        workspace_root: "pathlib.Path | None",
-    ) -> "Context":
+        workspace_root: pathlib.Path | None,
+    ) -> Self:
         """Create a context object from the command line arguments."""
         temp_path = os.environ.get("SAMWICH_TEMP", tempfile.mkdtemp())
 
@@ -78,7 +83,7 @@ class Context(NamedTuple):
 class DependenciesState(NamedTuple):
     """State of the dependencies."""
 
-    layer_path: "pathlib.Path | None"
+    layer_path: pathlib.Path | None
     managed_requirements_paths: list[pathlib.Path]
 
 
