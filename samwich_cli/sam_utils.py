@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import pathlib
-import subprocess
+import sys
 from typing import Final
 
 import click
+from samcli.cli.main import cli
 from samcli.commands._utils import constants
 from samcli.commands.build import build_context
 from samcli.lib.providers import provider
@@ -16,7 +17,10 @@ SAM_BUILD_DIR: Final[pathlib.Path] = pathlib.Path.cwd() / constants.DEFAULT_BUIL
 
 def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
     """Run the SAM build command."""
-    args = ("sam", "build", *sam_args)
+
+    original_args = sys.argv.copy()
+
+    args = ["sam", "build", *sam_args]
     if debug:
         click.echo()
         click.echo()
@@ -25,12 +29,16 @@ def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
     click.echo()
     click.echo(f"+ {' '.join(args)}")
     click.echo()
-    subprocess.check_call(args, shell=False)
-    click.echo()
-    click.secho("=" * 25, fg="magenta")
-    click.secho("End SAM build", fg="magenta")
-    click.echo()
-    click.echo()
+    try:
+        sys.argv = args
+        cli(prog_name="sam")
+    finally:
+        sys.argv = original_args
+        click.echo()
+        click.secho("=" * 25, fg="magenta")
+        click.secho("End SAM build", fg="magenta")
+        click.echo()
+        click.echo()
 
 
 def get_build_resources(
