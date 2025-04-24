@@ -32,6 +32,9 @@ def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
     try:
         sys.argv = args
         cli(prog_name="sam")
+    except SystemExit as e:
+        if e.code != 0:
+            raise
     finally:
         sys.argv = original_args
         click.echo()
