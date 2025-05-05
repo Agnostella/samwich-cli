@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+    MemorySize: 256
+    Timeout: 30
+    ReservedConcurrentExecutions: 10
+    Layers:
+      - !Ref Layer
+      - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python312-x86_64:13
+
+Resources:
+  Layer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${AWS::StackName}-layer"
+      Description: !Sub "${AWS::StackName} layer"
+      ContentUri: ./app_lib
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
+      BuildArchitecture: x86_64
+
+  ApiFunction1:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app/lambda_1
+      Handler: app.lambda_1.main.lambda_handler
+      Description: API handler function 1
+      Events:
+        AnyApiEvent:
+          Type: Api
+          Properties:
+            Path: /items/{proxy+} # Send requests on any path to the lambda function
+            Method: ANY # Send requests using any http method to the lambda function
+
+  ApiFunction2:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app/lambda_2
+      Handler: app.lambda_2.main.lambda_handler
+      Description: API handler function 2
+      Events:
+        AnyApiEvent:
+          Type: Api
+          Properties:
+            Path: /orders/{proxy+} # Send requests on any path to the lambda function
+            Method: ANY # Send requests using any http method to the lambda function
+
+  ApiFunction3:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app/lambda_3
+      Handler: app.lambda_3.main.lambda_handler
+      Description: API handler function 3
+      Events:
+        AnyApiEvent:
+          Type: Api
+          Properties:
+            Path: /accounts/{proxy+} # Send requests on any path to the lambda function
+            Method: ANY # Send requests using any http method to the lambda function

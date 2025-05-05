@@ -1,3 +1,4 @@
+import pathlib
 import pytest
 
 
@@ -23,6 +24,7 @@ def context_factory(tmp_path):
             temp_dir=temp_dir,
             sam_args=sam_args,
             source_dir=workspace_root / source_dir,
+            sam_build_dir=pathlib.Path.cwd() / "build",
             debug=debug,
         )
 
