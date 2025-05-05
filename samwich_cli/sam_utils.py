@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import pathlib
 import sys
-from typing import Final
 
 import click
 from samcli.cli.main import cli
@@ -11,8 +9,6 @@ from samcli.commands.build import build_context
 from samcli.lib.providers import provider
 
 from samwich_cli import model
-
-SAM_BUILD_DIR: Final[pathlib.Path] = pathlib.Path.cwd() / constants.DEFAULT_BUILD_DIR
 
 
 def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
@@ -45,14 +41,14 @@ def sam_build(sam_args: tuple[str, ...], debug: bool) -> None:
 
 
 def get_build_resources(
-    template_file: pathlib.Path,
+    ctx: model.Context,
 ) -> dict[str, list[model.ArtifactDetails]]:
     """Get the functions and layers from SAM build context."""
     with build_context.BuildContext(
-        template_file=str(template_file),
+        template_file=str(ctx.template_file),
         resource_identifier=None,
         base_dir=None,
-        build_dir=str(SAM_BUILD_DIR),
+        build_dir=str(ctx.sam_build_dir),
         cache_dir=constants.DEFAULT_CACHE_DIR,
         cached=False,
         parallel=False,

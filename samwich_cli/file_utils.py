@@ -77,8 +77,17 @@ def restructure_layer(
         click.secho(f"{INDENT}Source path contents:", fg="cyan")
         click.echo(f"{LIST_INDENT}- " + f"\n{LIST_INDENT}- ".join(source_contents))
 
-    target_dir = build_path / "python" / relative_path
-    shutil.copytree(code_uri, target_dir, dirs_exist_ok=False)
+    python_path = build_path / "python"
+    target_dir = python_path / relative_path
+    target_dir.mkdir(parents=True, exist_ok=False)
+
+    for item in code_uri.glob(pattern="*"):
+        if (python_path / item.name).exists():
+            shutil.move(python_path / item.name, target_dir)
+        elif ctx.debug:
+            click.echo(
+                f"{INDENT}Item {item} does not exist in the build path, skipping."
+            )
     _remove_compiled_cache(target_dir)
 
     if ctx.debug:

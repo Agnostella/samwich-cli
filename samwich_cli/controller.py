@@ -14,7 +14,7 @@ def run(ctx: model.Context) -> None:
     if ctx.debug:
         click.echo(f"Context: {ctx._asdict()}\n")
 
-    build_resources = sam_utils.get_build_resources(ctx.template_file)
+    build_resources = sam_utils.get_build_resources(ctx)
     layers = build_resources["layers"]
     functions = build_resources["functions"]
 
@@ -120,7 +120,7 @@ def _update_layer_structure(
             )
         file_utils.restructure_layer(
             ctx,
-            sam_utils.SAM_BUILD_DIR / layers[0].full_path,
+            ctx.sam_build_dir / layers[0].full_path,
             relative_path,
             layer_path,
         )
@@ -150,7 +150,7 @@ def _update_function_structure(
             )
         file_utils.restructure_lambda_function(
             ctx,
-            sam_utils.SAM_BUILD_DIR / fn.full_path,
+            ctx.sam_build_dir / fn.full_path,
             relative_path,
             pathlib.Path(fn.codeuri),
         )

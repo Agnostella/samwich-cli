@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from typing import TYPE_CHECKING, Final, NamedTuple
 
+from samwich_cli import sam_utils
+
 if TYPE_CHECKING:
     from typing import Self
 
@@ -26,6 +28,7 @@ class Context(NamedTuple):
     temp_dir: pathlib.Path
     template_file: pathlib.Path
     workspace_root: pathlib.Path
+    sam_build_dir: pathlib.Path
 
     @staticmethod
     def build(
@@ -39,32 +42,40 @@ class Context(NamedTuple):
         """Create a context object from the command line arguments."""
         temp_path = os.environ.get("SAMWICH_TEMP", tempfile.mkdtemp())
 
-        try:
-            default_workspace = subprocess.check_output(
-                ["git", "rev-parse", "--show-toplevel"], text=True
-            ).strip()
-        except Exception:
-            default_workspace = str(pathlib.Path.cwd())
+        if not workspace_root:
+            try:
+                workspace_root = pathlib.Path(
+                    subprocess.check_output(
+                        ["git", "rev-parse", "--show-toplevel"],
+                        text=True,
+                        stderr=subprocess.DEVNULL,
+                    ).strip()
+                )
+            except Exception:
+                workspace_root = pathlib.Path.cwd()
 
-        workspace_root = pathlib.Path(workspace_root or default_workspace).resolve()
+        resolved_workspace = workspace_root.resolve()
         template_file = template_file.resolve()
 
         if source_dir and (
             source_dir.is_absolute()
-            or not source_dir.resolve().is_relative_to(workspace_root)
+            or not source_dir.resolve().is_relative_to(resolved_workspace)
         ):
             raise click.BadOptionUsage(
                 option_name="source_dir",
-                message=f"source_dir must be relative and a child of the workspace root: {workspace_root}",
+                message=f"source_dir must be relative and a child of the workspace root: {resolved_workspace}",
             )
 
         return Context(
-            workspace_root=workspace_root,
+            workspace_root=resolved_workspace,
             requirements=requirements.resolve() if requirements else None,
             template_file=template_file,
             temp_dir=pathlib.Path(temp_path).resolve(),
             sam_args=Context._parse_sam_args(sam_args, template_file),
-            source_dir=workspace_root / source_dir if source_dir else workspace_root,
+            source_dir=resolved_workspace / source_dir
+            if source_dir
+            else resolved_workspace,
+            sam_build_dir=pathlib.Path.cwd() / sam_utils.constants.DEFAULT_BUILD_DIR,
             debug=debug,
         )
 

@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_should_match_snapshot_given_lambda_and_layer_build
+  set({
+    'build.toml',
+    'build/ApiFunction1/app/lambda_1/__init__.py',
+    'build/ApiFunction1/app/lambda_1/main.py',
+    'build/ApiFunction1/app/lambda_1/repository.py',
+    'build/ApiFunction2/app/lambda_2/__init__.py',
+    'build/ApiFunction2/app/lambda_2/main.py',
+    'build/ApiFunction2/app/lambda_2/repository.py',
+    'build/ApiFunction3/app/lambda_3/__init__.py',
+    'build/ApiFunction3/app/lambda_3/main.py',
+    'build/ApiFunction3/app/lambda_3/repository.py',
+    'build/Layer/python/annotated_types-0.7.0.dist-info/METADATA',
+    'build/Layer/python/annotated_types-0.7.0.dist-info/RECORD',
+    'build/Layer/python/annotated_types-0.7.0.dist-info/WHEEL',
+    'build/Layer/python/annotated_types-0.7.0.dist-info/licenses/LICENSE',
+    'build/Layer/python/annotated_types/__init__.py',
+    'build/Layer/python/annotated_types/py.typed',
+    'build/Layer/python/annotated_types/test_cases.py',
+    'build/Layer/python/app_lib/__init__.py',
+    'build/Layer/python/app_lib/base_repository.py',
+    'build/Layer/python/requirements.txt',
+    'build/template.yaml',
+  })
+# ---
