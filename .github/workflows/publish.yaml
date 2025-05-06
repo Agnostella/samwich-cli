@@ -2,6 +2,11 @@ name: Validate, Build and Publish
 
 on:
   push:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
 
 permissions:
   contents: write
@@ -26,7 +31,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.2
+        uses: agnostella/pipx-install@v1.0.3
         with:
           package-specs: >-
             'uv>=0.6.0,<1.0.0'
@@ -52,7 +57,7 @@ jobs:
         python-version: "3.13"
 
     - name: Install uv
-      uses: agnostella/pipx-install@v1.0.2
+      uses: agnostella/pipx-install@v1.0.3
       with:
         package-specs: >-
           'uv>=0.6.0,<1.0.0'
@@ -96,7 +101,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.2
+        uses: agnostella/pipx-install@v1.0.3
         with:
           package-specs: >-
             uv>=0.6.0,<1.0.0
@@ -105,20 +110,13 @@ jobs:
         run: |
           uv publish
 
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create
-          "$GITHUB_REF_NAME"
-          --repo "$GITHUB_REPOSITORY"
-          --notes ""
-
   artifacts:
     name: Create artifacts
-    needs: [publish]
+    needs: [build, validate]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
 
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         os:
@@ -127,7 +125,6 @@ jobs:
           - {"id": "macos-13", "name": "darwin_amd64"}
           - {"id": "macos-15", "name": "darwin_arm64"}
           - {"id": "windows-2025", "name": "windows_amd64"}
-          - {"id": "windows-11-arm", "name": "windows_arm64"}
 
     runs-on: ${{ matrix.os.id }}
     steps:
@@ -140,7 +137,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.2
+        uses: agnostella/pipx-install@v1.0.3
         with:
           package-specs: >-
             'uv>=0.6.0,<1.0.0'
@@ -151,10 +148,31 @@ jobs:
         run: |
           uv export --no-emit-workspace --no-default-groups --format requirements-txt --output-file requirements.txt
           pip install -r requirements.txt --target build
-          cp -r samwich_cli build/
-          find build/ -type d -name "__pycache__" -prune -exec rm -rf {} \;
 
           cd build
-          zip -qr ../samwich-cli_${{ github.ref_name }}_${{ matrix.python-version }}_${{ matrix.os.name }}.zip *
 
-          gh release upload "$GITHUB_REF_NAME" ../samwich-cli*.zip
+          python -c "
+          import os
+          import pathlib
+          import shutil
+          import zipfile
+
+          shutil.copytree('../samwich_cli', './samwich_cli', dirs_exist_ok=True)
+
+          python_version = '${{ matrix.python-version }}'.replace('.', '')
+          with zipfile.ZipFile(
+              f'../samwich-cli_${{ inputs.version || github.ref_name }}_python{python_version}_${{ matrix.os.name }}.zip',
+              mode='w',
+              compression=zipfile.ZIP_DEFLATED,
+              compresslevel=9,
+          ) as zipf:
+              for root, dirs, files in os.walk('.'):
+                  for file in files:
+                      filename = pathlib.Path(root) / file
+                      zipf.write(
+                          filename, os.path.relpath(start=pathlib.Path.cwd(), path=filename)
+                      )
+          "
+
+          gh release create ${{ inputs.version || github.ref_name }} --repo "$GITHUB_REPOSITORY" --notes "" || true
+          gh release upload ${{ inputs.version || github.ref_name }} ../samwich-cli*.zip --repo "$GITHUB_REPOSITORY" --clobber
