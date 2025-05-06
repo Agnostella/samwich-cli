@@ -26,7 +26,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1
+        uses: agnostella/pipx-install@v1.0.2
         with:
           package-specs: >-
             'uv>=0.6.0,<1.0.0'
@@ -96,7 +96,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1
+        uses: agnostella/pipx-install@v1.0.2
         with:
           package-specs: >-
             uv>=0.6.0,<1.0.0
@@ -113,3 +113,48 @@ jobs:
           "$GITHUB_REF_NAME"
           --repo "$GITHUB_REPOSITORY"
           --notes ""
+
+  artifacts:
+    name: Create artifacts
+    needs: [publish]
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        os:
+          - {"id": "ubuntu-24.04", "name": "linux_amd64"}
+          - {"id": "ubuntu-24.04-arm", "name": "linux_arm64"}
+          - {"id": "macos-13", "name": "darwin_amd64"}
+          - {"id": "macos-15", "name": "darwin_arm64"}
+          - {"id": "windows-2025", "name": "windows_amd64"}
+          - {"id": "windows-11-arm", "name": "windows_arm64"}
+
+    runs-on: ${{ matrix.os.id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: agnostella/pipx-install@v1.0.2
+        with:
+          package-specs: >-
+            'uv>=0.6.0,<1.0.0'
+
+      - name: Package
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          uv export --no-emit-workspace --no-default-groups --format requirements-txt --output-file requirements.txt
+          pip install -r requirements.txt --target build
+          cp -r samwich_cli build/
+          find build/ -type d -name "__pycache__" -prune -exec rm -rf {} \;
+
+          cd build
+          zip -qr ../samwich-cli_${{ github.ref_name }}_${{ matrix.python-version }}_${{ matrix.os.name }}.zip *
+
+          gh release upload "$GITHUB_REF_NAME" ../samwich-cli*.zip

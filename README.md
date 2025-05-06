@@ -4,8 +4,6 @@ _A sandwich :sandwich: for `sam build`_
 
 SAMWICH CLI is a tool that simplifies working with AWS Serverless Application Model (SAM) deployments, particularly focusing on dependency management and build processes for **Python** Lambda functions and layers.
 
-**Note: This project is in early development and may not be fully functional.**
-
 <!-- ts -->
 
 ## Table of Contents

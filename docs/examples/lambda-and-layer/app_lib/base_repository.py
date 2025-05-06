@@ -23,9 +23,9 @@ class BaseRepository:
                 cursor.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' LIMIT 1"
                 )
-                if cursor.fetchone() is None:
-                    logger.error("No tables found in the database.")
-                return {"status": "healthy"}
+                if cursor.fetchone() is not None:
+                    return {"status": "healthy"}
+            logger.error("Failed to perform health check query")
         except Exception:
             logger.exception("Database connection error")
 
