@@ -12,6 +12,10 @@ permissions:
   contents: write
   id-token: write
 
+env:
+  PIPX_PACKAGES: >-
+    'uv>=0.6.0,<1.0.0'
+
 jobs:
   validate:
     name: Validate quality checks with pre-commit
@@ -31,10 +35,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.3
+        uses: agnostella/pipx-install@1dbea7f4b8755e748d3f30726bd91e78c878c698
         with:
-          package-specs: >-
-            'uv>=0.6.0,<1.0.0'
+          package-specs: ${{ env.PIPX_PACKAGES }}
 
       - name: Run pre-commit
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
@@ -57,10 +60,9 @@ jobs:
         python-version: "3.13"
 
     - name: Install uv
-      uses: agnostella/pipx-install@v1.0.3
+      uses: agnostella/pipx-install@1dbea7f4b8755e748d3f30726bd91e78c878c698
       with:
-        package-specs: >-
-          'uv>=0.6.0,<1.0.0'
+        package-specs: ${{ env.PIPX_PACKAGES }}
 
     - name: Build
       run: |
@@ -101,10 +103,9 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.3
+        uses: agnostella/pipx-install@1dbea7f4b8755e748d3f30726bd91e78c878c698
         with:
-          package-specs: >-
-            uv>=0.6.0,<1.0.0
+          package-specs: ${{ env.PIPX_PACKAGES }}
 
       - name: Build and publish
         run: |
@@ -137,10 +138,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: agnostella/pipx-install@v1.0.3
+        uses: agnostella/pipx-install@1dbea7f4b8755e748d3f30726bd91e78c878c698
         with:
-          package-specs: >-
-            'uv>=0.6.0,<1.0.0'
+          package-specs: ${{ env.PIPX_PACKAGES }}
 
       - name: Package
         env:
@@ -148,6 +148,7 @@ jobs:
         run: |
           uv export --no-emit-workspace --no-default-groups --format requirements-txt --output-file requirements.txt
           pip install -r requirements.txt --target build
+          cp scripts/* build/
 
           cd build
 
@@ -155,11 +156,13 @@ jobs:
           import os
           import pathlib
           import shutil
+          import sys
           import zipfile
 
           shutil.copytree('../samwich_cli', './samwich_cli', dirs_exist_ok=True)
 
-          python_version = '${{ matrix.python-version }}'.replace('.', '')
+          python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+          os_name = os.getenv('OS_NAME')
           with zipfile.ZipFile(
               f'../samwich-cli_${{ inputs.version || github.ref_name }}_python{python_version}_${{ matrix.os.name }}.zip',
               mode='w',

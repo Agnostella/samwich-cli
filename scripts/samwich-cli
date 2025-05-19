@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PYTHONPATH=$(pwd)
+script_dir=$(dirname "$0")
+python3 "$script_dir"/entrypoint.py "$@"
