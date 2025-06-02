@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pathlib
+import sys
 
 import click
 
@@ -77,3 +78,7 @@ def cli(
             workspace_root=workspace_root,
         )
     )
+
+
+if __name__ == "__main__":
+    sys.exit(cli())
